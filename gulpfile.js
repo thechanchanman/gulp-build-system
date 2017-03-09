@@ -2,6 +2,7 @@
 ** Required
 ********************************************/
 const autoprefixer = require('gulp-autoprefixer');
+const babel = require('gulp-babel');
 const browserSync = require('browser-sync');
 const compass = require('gulp-compass');
 const del = require('del');
@@ -51,6 +52,8 @@ gulp.task('scripts', function(){
   .pipe(plumber())
   // optional --- initializing sourcemaps
   .pipe(sourcemaps.init())
+  // compile ES6 code with Babel
+  .pipe(babel())
   // adding .min suffix to file name
   .pipe(rename({suffix:'.min'}))
   // minify
