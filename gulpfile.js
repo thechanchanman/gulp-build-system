@@ -8,6 +8,8 @@ const compass = require('gulp-compass');
 const del = require('del');
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
+const imagemin = require('gulp-imagemin');
+const newer = require('gulp-newer');
 const plumber = require('gulp-plumber');
 const rename = require('gulp-rename');
 const sourcemaps = require('gulp-sourcemaps');
@@ -16,39 +18,44 @@ const uglify = require('gulp-uglify');
 /********************************************
 ** Paths
 ********************************************/
-const folders = {
-  // public base directory
-  publicBase : './dist',
-  // public CSS directory
-  publicCss : 'dist/css',
-  // public JS directory
-  publicJs : 'dist/js',
-  // JS development directory
-  devJs : 'src/js',
-  // Sass development directory
-  devSass : 'src/scss'
+const dest = 'public';
+const source = 'src';
+
+const scripts = {
+  // *** probably this section will be removed later ***
+  // all scripts except vendor scripts (usually *.min.js files)
+  in : [source + '/js/**/*.js', '!' + source + '/js/**/*.min.js'],
+  out : dest + '/js',
+  vendorsIn : source + '/js/**/*.min.js',
+  vendorsOut : dest + '/js'
 };
 
-const files = {
-  // all script files excluding vendor scripts
-  scripts : ['src/js/**/*.js', '!src/js/**/*.min.js'],
-  // all vendor scripts
-  vendorScripts : 'src/js/**/*.min.js',
-  // all script files including vendor script
-  allScripts : 'src/js/**/*.js',
-  // main stylesheet
-  style : 'src/scss/styles.scss',
-  // all stylesheets
-  allStyles : 'src/scss/**/*.scss',
-  // all html files
-  html : 'dist/**/*.html'
+const styles = {
+  main : source + '/scss/styles.scss',
+  in : source + '/scss/**/*.scss',
+  out : dest + '/css'
+};
+
+const pages = {
+  in : dest + '/**/*.html'
+};
+
+const images = {
+  in : source + '/images/*.*',
+  out: dest + '/images/'
 };
 
 /********************************************
 ** Script tasks
 ********************************************/
-gulp.task('scripts', function(){
-  gulp.src(files.scripts)
+gulp.task('vendorScripts', function(){
+  // only distribute minified js files
+  gulp.src(scripts.vendorsIn)
+  .pipe(gulp.dest(scripts.out));
+});
+
+gulp.task('scripts', ['vendorScripts'], function(){
+  gulp.src(scripts.in)
   .pipe(plumber())
   // optional --- initializing sourcemaps
   .pipe(sourcemaps.init())
@@ -60,10 +67,7 @@ gulp.task('scripts', function(){
   .pipe(uglify())
   // optional --- writing sourcemaps
   .pipe(sourcemaps.write())
-  .pipe(gulp.dest(folders.publicJs));
-  // only distribute minified js files
-  gulp.src(files.vendorScripts)
-  .pipe(gulp.dest(folders.publicJs))
+  .pipe(gulp.dest(scripts.out))
   .pipe(browserSync.reload({ stream:true }));
 });
 
@@ -71,17 +75,17 @@ gulp.task('scripts', function(){
 ** Compass / Sass tasks
 ********************************************/
 gulp.task('compass', function(){
-  gulp.src(files.allStyles)
+  gulp.src(styles.in)
   .pipe(plumber())
   .pipe(compass({
     config_file: './config.rb',
-    css: folders.publicCss,
-    sass: folders.devSass,
+    css: styles.out,
+    sass: source + '/scss',
     sourcemap: true,
     require: ['susy']
   }))
   .pipe(autoprefixer({browsers: ['last 5 versions']}))
-  .pipe(gulp.dest(folders.publicCss))
+  .pipe(gulp.dest(styles.out))
   .pipe(browserSync.reload({ stream:true }));
 });
 
@@ -89,7 +93,7 @@ gulp.task('compass', function(){
 ** HTML tasks
 ********************************************/
 gulp.task('html', function(){
-  gulp.src(files.html)
+  gulp.src(pages.in)
   .pipe(browserSync.reload({ stream:true }));
 });
 
@@ -99,9 +103,19 @@ gulp.task('html', function(){
 gulp.task('browser-sync', function(){
   browserSync({
     server: {
-      baseDir: folders.publicBase
+      baseDir: dest
     }
   });
+});
+
+/********************************************
+** Images tasks
+********************************************/
+gulp.task('images', function(){
+  gulp.src(images.in)
+  .pipe(newer(images.out))
+  .pipe(imagemin())
+  .pipe(gulp.dest(images.out));
 });
 
 /********************************************
@@ -110,13 +124,13 @@ gulp.task('browser-sync', function(){
 gulp.task('watch', function(){
   // watch for changes on js files inside
   // src/js folder and run 'scripts' task
-  gulp.watch(files.allScripts, ['scripts']);
+  gulp.watch(scripts.in, ['scripts']);
   // watch for changes on scss files inside
   // src/scss folder and run 'compass' task
-  gulp.watch(files.allStyles, ['compass']);
+  gulp.watch(styles.in, ['compass']);
   // watch for changes on html files inside
   // dist folder and run 'html' task
-  gulp.watch(files.html, ['html']);
+  gulp.watch(pages.in, ['html']);
 });
 
 /********************************************
