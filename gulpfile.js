@@ -10,6 +10,7 @@ const gulp = require('gulp');
 const gulpif = require('gulp-if');
 const imagemin = require('gulp-imagemin');
 const newer = require('gulp-newer');
+const php = require('gulp-connect-php');
 const plumber = require('gulp-plumber');
 const rename = require('gulp-rename');
 const sourcemaps = require('gulp-sourcemaps');
@@ -20,6 +21,7 @@ const uglify = require('gulp-uglify');
 ********************************************/
 const dest = 'public';
 const source = 'src';
+const proxy = '127.0.0.1/beta'; // localhost/[folder] for php
 
 const scripts = {
   // *** probably this section will be removed later ***
@@ -36,8 +38,12 @@ const styles = {
   out : dest + '/css'
 };
 
-const pages = {
+const htmlPages = {
   in : dest + '/**/*.html'
+};
+
+const phpPages = {
+  in : '**/*.php'
 };
 
 const images = {
@@ -93,8 +99,21 @@ gulp.task('compass', function(){
 ** HTML tasks
 ********************************************/
 gulp.task('html', function(){
-  gulp.src(pages.in)
+  gulp.src(htmlPages.in)
   .pipe(browserSync.reload({ stream:true }));
+});
+
+/********************************************
+** PHP tasks
+********************************************/
+gulp.task('php-serve', function() {
+  php.server({
+    base: dest
+  }, function (){
+    browserSync({
+      proxy: '127.0.0.1' + '/beta/' + dest
+    });
+  });
 });
 
 /********************************************
@@ -130,12 +149,15 @@ gulp.task('watch', function(){
   gulp.watch(styles.in, ['compass']);
   // watch for changes on html files inside
   // dist folder and run 'html' task
-  gulp.watch(pages.in, ['html']);
+  gulp.watch(htmlPages.in, ['html']);
+  gulp.watch(phpPages.in).on('change', browserSync.reload);
 });
 
 /********************************************
 ** Default task
 ********************************************/
+// use browser-sync for serving html pages
+// or php for php pages
 gulp.task('default', [
   'scripts',
   'compass',

@@ -1975,6 +1975,13 @@ gulp-compass@^2.1.0:
     through2 "^0.6.5"
     which "^1.1.1"
 
+gulp-connect-php@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/gulp-connect-php/-/gulp-connect-php-0.0.8.tgz#b8532f84488e0f215e3debd8ed288475636c6aae"
+  dependencies:
+    bin-version-check "^2.1.0"
+    opn "^1.0.0"
+
 gulp-decompress@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/gulp-decompress/-/gulp-decompress-1.2.0.tgz#8eeb65a5e015f8ed8532cafe28454960626f0dc7"
@@ -3183,6 +3190,10 @@ opn@4.0.2:
   dependencies:
     object-assign "^4.0.1"
     pinkie-promise "^2.0.0"
+
+opn@^1.0.0:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/opn/-/opn-1.0.2.tgz#b909643346d00a1abc977a8b96f3ce3c53d5cf5f"
 
 options@>=0.0.5:
   version "0.0.6"
