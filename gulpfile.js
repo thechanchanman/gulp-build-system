@@ -16,6 +16,9 @@ const rename = require('gulp-rename');
 const sourcemaps = require('gulp-sourcemaps');
 const uglify = require('gulp-uglify');
 
+const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
+
 /********************************************
 ** Paths
 ********************************************/
@@ -29,7 +32,8 @@ const scripts = {
   in : [source + '/js/**/*.js', '!' + source + '/js/**/*.min.js'],
   out : dest + '/js',
   vendorsIn : source + '/js/**/*.min.js',
-  vendorsOut : dest + '/js'
+  vendorsOut : dest + '/js',
+  webpack : dest + '/js/**/*.js'
 };
 
 const styles = {
@@ -117,6 +121,17 @@ gulp.task('php-serve', function() {
 });
 
 /********************************************
+** Webpack tasks
+********************************************/
+gulp.task('webpack', function(cb){
+  exec('webpack', function(err, stdout, stderr){
+    console.log(stdout);
+    console.log(stderr);
+    cb(err);
+  });
+});
+
+/********************************************
 ** Browser-Sync tasks
 ********************************************/
 gulp.task('browser-sync', function(){
@@ -141,16 +156,21 @@ gulp.task('images', function(){
 ** Watch tasks
 ********************************************/
 gulp.task('watch', function(){
-  // watch for changes on js files inside
-  // src/js folder and run 'scripts' task
-  gulp.watch(scripts.in, ['scripts']);
-  // watch for changes on scss files inside
-  // src/scss folder and run 'compass' task
+  // watch for changes on js files
+  // gulp.watch(scripts.in, ['scripts']);
+
+  // watch for changes in scripts destination
+  // folder from webpack
+  gulp.watch(scripts.webpack).on('change', browserSync.reload);
+
+  // watch for changes on scss files
   gulp.watch(styles.in, ['compass']);
-  // watch for changes on html files inside
-  // dist folder and run 'html' task
+
+  // watch for changes on html files
   gulp.watch(htmlPages.in, ['html']);
-  gulp.watch(phpPages.in).on('change', browserSync.reload);
+
+  // watch for changes on php files
+  // gulp.watch(phpPages.in).on('change', browserSync.reload);
 });
 
 /********************************************
@@ -159,7 +179,7 @@ gulp.task('watch', function(){
 // use browser-sync for serving html pages
 // or php for php pages
 gulp.task('default', [
-  'scripts',
+  'webpack',
   'compass',
   'html',
   'browser-sync',
