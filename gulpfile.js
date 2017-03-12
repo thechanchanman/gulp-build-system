@@ -4,7 +4,6 @@
 const autoprefixer = require('gulp-autoprefixer');
 const babel = require('gulp-babel');
 const browserSync = require('browser-sync');
-const compass = require('gulp-compass');
 const del = require('del');
 const gulp = require('gulp');
 const gulpif = require('gulp-if');
@@ -13,6 +12,7 @@ const newer = require('gulp-newer');
 const php = require('gulp-connect-php');
 const plumber = require('gulp-plumber');
 const rename = require('gulp-rename');
+const sass = require('gulp-sass');
 const sourcemaps = require('gulp-sourcemaps');
 const uglify = require('gulp-uglify');
 
@@ -84,17 +84,13 @@ gulp.task('scripts', ['vendorScripts'], function(){
 /********************************************
 ** Compass / Sass tasks
 ********************************************/
-gulp.task('compass', function(){
+gulp.task('sass', function(){
   gulp.src(styles.in)
   .pipe(plumber())
-  .pipe(compass({
-    config_file: './config.rb',
-    css: styles.out,
-    sass: source + '/scss',
-    sourcemap: true,
-    require: ['susy']
-  }))
+  .pipe(sourcemaps.init())
+  .pipe(sass({ outputStyles: 'compressed' }))
   .pipe(autoprefixer({browsers: ['last 5 versions']}))
+  .pipe(sourcemaps.write())
   .pipe(gulp.dest(styles.out))
   .pipe(browserSync.reload({ stream:true }));
 });
@@ -164,7 +160,7 @@ gulp.task('watch', function(){
   gulp.watch(scripts.webpack).on('change', browserSync.reload);
 
   // watch for changes on scss files
-  gulp.watch(styles.in, ['compass']);
+  gulp.watch(styles.in, ['sass']);
 
   // watch for changes on html files
   gulp.watch(htmlPages.in, ['html']);
@@ -176,11 +172,12 @@ gulp.task('watch', function(){
 /********************************************
 ** Default task
 ********************************************/
-// use browser-sync for serving html pages
+// *** use browser-sync for serving html pages
 // or php for php pages
+//*** use webpack or scripts for javascript files
 gulp.task('default', [
-  'webpack',
-  'compass',
+  'scripts',
+  'sass',
   'html',
   'browser-sync',
   'watch'
